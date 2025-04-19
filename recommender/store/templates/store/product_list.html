@@ -1,0 +1,70 @@
+{% extends 'base_generic.html' %}
+{% load url_helpers %}
+
+{% block content %}
+<h2>Available Products</h2>
+
+<!-- Category Filter -->
+<form method="GET" action="{% url 'product_list' %}">
+    {% if request.GET.page %}
+        <input type="hidden" name="page" value="{{ request.GET.page }}">
+    {% endif %}
+    <select name="category" onchange="this.form.submit()">
+        <option value="">-- Select Category --</option>
+        {% for category in categories %}
+            <option value="{{ category.id }}" {% if request.GET.category == category.id|stringformat:'s' %}selected{% endif %}>
+                {{ category.name }}
+            </option>
+        {% endfor %}
+    </select>
+</form>
+
+<div class="product-grid">
+    {% for product in page_obj %}
+        <div class="product-card">
+            <h3>{{ product.name }}</h3>
+            <p>{{ product.description }}</p>
+            <p><strong>Price:</strong> ${{ product.price }}</p>
+
+            {% if product.id in purchased_products %}
+                <p class="purchased-label">✔️ Already Purchased</p>
+                <a href="{% url 'leave_feedback' product.id %}" class="feedback-btn">Leave Feedback</a>
+            {% else %}
+                <form method="POST" action="{% url 'add_to_cart' product.id %}">
+                    {% csrf_token %}
+                    {% if request.GET.category %}
+                        <input type="hidden" name="category" value="{{ request.GET.category }}">
+                    {% endif %}
+                    <button type="submit" class="add-to-cart-btn">Add to Cart</button>
+                </form>
+            {% endif %}
+        </div>
+    {% endfor %}
+</div>
+
+<!-- Pagination Controls -->
+<div class="pagination">
+    <span class="step-links">
+        {% if page_obj.has_previous %}
+            <a href="?{% url_replace request 'page' 1 %}">&laquo; first</a>
+            <a href="?{% url_replace request 'page' page_obj.previous_page_number %}">previous</a>
+        {% endif %}
+
+        <span class="current">
+            Page {{ page_obj.number }} of {{ page_obj.paginator.num_pages }}.
+        </span>
+
+        {% if page_obj.has_next %}
+            <a href="?{% url_replace request 'page' page_obj.next_page_number %}">next</a>
+            <a href="?{% url_replace request 'page' page_obj.paginator.num_pages %}">last &raquo;</a>
+        {% endif %}
+    </span>
+</div>
+
+<!-- Cart Link with Category Preservation -->
+{% if user.is_authenticated %}
+    <div class="cart-link">
+        <a href="{% url 'view_cart' %}" class="view-cart-btn">View Cart ({{ cart_item_count }})</a>
+    </div>
+{% endif %}
+{% endblock %}

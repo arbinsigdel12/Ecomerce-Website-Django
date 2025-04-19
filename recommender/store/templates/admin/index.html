@@ -1,0 +1,16 @@
+{% extends "admin/index.html" %}
+
+{% block content %}
+<div class="app-feedback module">
+    <table>
+        <caption>
+            <a href="{% url 'admin:store_feedback_changelist' %}" class="section">Feedback</a>
+        </caption>
+        <tr>
+            <th scope="row">Unreviewed Feedback</th>
+            <td><a href="{% url 'admin:store_feedback_changelist' %}?is_reviewed__exact=0">{{ unreviewed_feedback_count }}</a></td>
+        </tr>
+    </table>
+</div>
+{{ block.super }}
+{% endblock %}

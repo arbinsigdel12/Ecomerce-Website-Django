@@ -1,0 +1,180 @@
+{% extends 'base_generic.html' %}
+
+{% block content %}
+<style>
+    /* Improved Star Rating System */
+    .star-rating {
+        display: flex;
+        flex-direction: row;
+        gap: 5px;
+        margin: 10px 0;
+    }
+    
+    .star-rating input[type="radio"] {
+        display: none;
+    }
+    
+    .star-rating label {
+        font-size: 2rem;
+        color: #ddd;
+        cursor: pointer;
+        transition: all 0.2s ease;
+    }
+    
+    .star-rating label:hover,
+    .star-rating label:hover ~ label {
+        color: #ffc107;
+    }
+    
+    .star-rating input[type="radio"]:checked ~ label {
+        color: #ffc107;
+    }
+    
+    .star-rating input[type="radio"]:checked + label {
+        color: #ffc107;
+        transform: scale(1.1);
+    }
+    
+    /* Rating labels */
+    .rating-labels {
+        display: flex;
+        justify-content: space-between;
+        width: 100%;
+        margin-top: 5px;
+        font-size: 0.8rem;
+        color: #666;
+    }
+    
+    /* Form improvements */
+    .feedback-form {
+        max-width: 600px;
+        margin: 0 auto;
+        padding: 20px;
+        background: #f9f9f9;
+        border-radius: 8px;
+        box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+    }
+    
+    .form-group {
+        margin-bottom: 20px;
+    }
+    
+    .form-group label {
+        display: block;
+        margin-bottom: 8px;
+        font-weight: bold;
+    }
+    
+    textarea.form-control {
+        width: 100%;
+        padding: 10px;
+        border: 1px solid #ddd;
+        border-radius: 4px;
+        min-height: 120px;
+    }
+</style>
+
+<div class="feedback-form">
+    <h2 class="text-center">
+        {% if existing_feedback %}
+            Update Your Feedback for {{ product.name }}
+        {% else %}
+            Leave Feedback for {{ product.name }}
+        {% endif %}
+    </h2>
+
+    <form method="post">
+        {% csrf_token %}
+        
+        <div class="form-group">
+            <label>Rating:</label>
+            <div class="star-rating">
+                {% for value, label in form.rating.field.choices %}
+                    <input 
+                        type="radio" 
+                        id="star{{ value }}" 
+                        name="rating" 
+                        value="{{ value }}"
+                        {% if form.rating.value|stringformat:"s" == value|stringformat:"s" %}checked{% endif %}
+                    >
+                    <label for="star{{ value }}" title="{{ label }}">★</label>
+                {% endfor %}
+            </div>
+        </div>
+
+        <div class="form-group">
+            {{ form.comment.label_tag }}
+            {{ form.comment }}
+        </div>
+
+        <div class="form-actions">
+            <button type="submit" class="btn btn-primary">
+                {% if existing_feedback %}Update Feedback{% else %}Submit Feedback{% endif %}
+            </button>
+            <a href="{% url 'product_list' %}{% if request.GET.category %}?category={{ request.GET.category }}{% endif %}" class="btn btn-secondary">Cancel</a>
+        </div>
+    </form>
+</div>
+
+<script>
+    // Enhanced Star Rating Interaction
+    document.addEventListener('DOMContentLoaded', function() {
+        const stars = document.querySelectorAll('.star-rating label');
+        const inputs = document.querySelectorAll('.star-rating input');
+        
+        // Highlight stars on hover
+        stars.forEach(star => {
+            star.addEventListener('mouseover', function() {
+                const currentStar = this;
+                highlightStars(currentStar);
+            });
+            
+            star.addEventListener('mouseout', function() {
+                const checkedInput = document.querySelector('.star-rating input:checked');
+                if (checkedInput) {
+                    highlightStars(checkedInput.nextElementSibling);
+                } else {
+                    resetStars();
+                }
+            });
+        });
+        
+        // Update display when a star is selected
+        inputs.forEach(input => {
+            input.addEventListener('change', function() {
+                const selectedStar = this.nextElementSibling;
+                highlightStars(selectedStar);
+                console.log('Selected Rating:', this.value);
+            });
+        });
+        
+        function highlightStars(star) {
+            let current = star;
+            // Highlight all stars up to the hovered one
+            while (current) {
+                current.style.color = '#ffc107';
+                current = current.previousElementSibling;
+            }
+            // Reset stars after the hovered one
+            let next = star.nextElementSibling;
+            while (next) {
+                next.style.color = '#ddd';
+                next = next.nextElementSibling;
+            }
+        }
+        
+        function resetStars() {
+            stars.forEach(star => {
+                star.style.color = '#ddd';
+            });
+        }
+        
+        // Initialize with currently selected rating
+        const checkedInput = document.querySelector('.star-rating input:checked');
+        if (checkedInput) {
+            highlightStars(checkedInput.nextElementSibling);
+        }
+    });
+</script>
+
+{% endblock %}

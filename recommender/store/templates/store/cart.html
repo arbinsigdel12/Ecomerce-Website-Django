@@ -1,0 +1,65 @@
+{% extends 'base_generic.html' %}
+{% load static %}
+{% load url_helpers %}
+
+{% block content %}
+    <link rel="stylesheet" href="{% static 'css/cart.css' %}">
+    
+    <h2>Your Cart</h2>
+
+    {% if cart_items %}
+        <form method="POST" action="{% url 'purchase_all' %}">
+            {% csrf_token %}
+            {% if request.GET.category %}
+                <input type="hidden" name="category" value="{{ request.GET.category }}">
+            {% endif %}
+            <button type="submit" class="btn btn-primary">Buy All Items</button>
+        </form>
+
+        <ul class="cart-items">
+            {% for item in cart_items %}
+                <li class="cart-item">
+                    <div class="cart-item-details">
+                        <h3>{{ item.product.name }}</h3>
+                        <p>{{ item.product.description }}</p>
+                        <p><strong>Price:</strong> ${{ item.product.price }}</p>
+                        <p><strong>Quantity:</strong> {{ item.quantity }}</p>
+                        <p><strong>Total:</strong> ${{ item.total }}</p>
+                    </div>
+
+                    <div class="cart-item-actions">
+                        <form method="POST" action="{% url 'purchase_product' item.product.id %}">
+                            {% csrf_token %}
+                            {% if request.GET.category %}
+                                <input type="hidden" name="category" value="{{ request.GET.category }}">
+                            {% endif %}
+                            <button type="submit" class="btn btn-primary">Buy Now</button>
+                        </form>
+                        
+                        <form method="POST" action="{% url 'remove_from_cart' item.product.id %}">
+                            {% csrf_token %}
+                            {% if request.GET.category %}
+                                <input type="hidden" name="category" value="{{ request.GET.category }}">
+                            {% endif %}
+                            <button type="submit" class="btn btn-danger">Remove</button>
+                        </form>
+                    </div>
+                </li>
+            {% endfor %}
+        </ul>
+
+        <div class="cart-total">
+            <strong>Total:</strong> ${{ total_price }}
+        </div>
+    {% else %}
+        <p class="empty-cart-message">Your cart is empty.</p>
+    {% endif %}
+
+{% load cart_extras %}
+    <!-- Modified Continue Shopping link -->
+    <a href="{% url 'product_list' %}{% if request.GET.category %}?category={{ request.GET.category }}{% endif %}" 
+       class="continue-shopping">
+        Continue Shopping
+    </a>
+    <a href="{% url 'purchase_history' %}" class="view-purchases">View Purchases</a>
+{% endblock %}

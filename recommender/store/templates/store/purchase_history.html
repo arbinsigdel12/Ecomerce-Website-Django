@@ -1,0 +1,56 @@
+{% extends 'base_generic.html' %}
+{% load math_filters %}
+
+{% block content %}
+<div class="purchase-history-container">
+    <div class="print-header">
+        <h2>Your Purchase History</h2>
+        <button onclick="window.print()" class="print-btn">Print Receipt</button>
+    </div>
+
+    {% if purchases %}
+        <div class="printable">
+            <!-- Customer Information -->
+            <div class="customer-info">
+                <h3>{{ user.get_full_name|default:user.username }}</h3>
+                <p>Member since: {{ user.date_joined|date:"F Y" }}</p>
+                <p>Print date: {% now "F j, Y g:i A" %}</p>
+            </div>
+
+            <!-- Purchase List -->
+            <div class="purchase-list">
+                <table class="purchase-table">
+                    <thead>
+                        <tr>
+                            <th>Item</th>
+                            <th>Price</th>
+                            <th>Qty</th>
+                            <th>Subtotal</th>
+                            <th>Date</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {% for purchase in purchases %}
+                        <tr>
+                            <td>{{ purchase.product.name }}</td>
+                            <td>${{ purchase.product.price|floatformat:2 }}</td>
+                            <td>{{ purchase.quantity }}</td>
+                            <td>${{ purchase.product.price|multiply:purchase.quantity|floatformat:2 }}</td>
+                            <td>{{ purchase.purchase_date|date:"M j, Y" }}</td>
+                        </tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+            </div>
+
+            <!-- Summary -->
+            <div class="purchase-total">
+                <p><strong>Total Items:</strong> {{ total_quantity }} items</p>
+                <p><strong>Total Spent:</strong> ${{ total_spent|floatformat:2 }}</p>
+            </div>
+        </div>
+    {% else %}
+        <p class="empty-message">You haven't purchased anything yet.</p>
+    {% endif %}
+</div>
+{% endblock %}
